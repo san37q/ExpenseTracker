@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpendWise — Daily Expense Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --green: #00e5a0;
+    --green-dim: rgba(0,229,160,0.12);
+    --red: #ff4d6d;
+    --red-dim: rgba(255,77,109,0.12);
+    --blue: #4f8ef7;
+    --blue-dim: rgba(79,142,247,0.12);
+    --yellow: #ffd166;
+    --yellow-dim: rgba(255,209,102,0.12);
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    max-width: 780px;
+    margin: 0 auto 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .logo .material-icons-round { color: var(--green); font-size: 1.6rem; }
+
+  .date-badge {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--surface);
+    padding: 6px 14px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+  }
+
+  .main { max-width: 780px; margin: 0 auto; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .card.green::before { background: var(--green); }
+  .card.red::before { background: var(--red); }
+  .card.blue::before { background: var(--blue); }
+  .card.yellow::before { background: var(--yellow); }
+
+  .card-icon {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .card.green .card-icon { background: var(--green-dim); color: var(--green); }
+  .card.red .card-icon { background: var(--red-dim); color: var(--red); }
+  .card.blue .card-icon { background: var(--blue-dim); color: var(--blue); }
+  .card.yellow .card-icon { background: var(--yellow-dim); color: var(--yellow); }
+
+  .card-label {
+    font-size: 0.67rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  .card-amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -1px;
+  }
+
+  .card.green .card-amount { color: var(--green); }
+  .card.red .card-amount { color: var(--red); }
+  .card.blue .card-amount { color: var(--blue); }
+  .card.yellow .card-amount { color: var(--yellow); }
+
+  .card-sub { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+  .balance-bar {
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 4px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .balance-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--blue), var(--green));
+    transition: width 0.6s ease;
+  }
+
+  .section-box {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .section-title .material-icons-round { font-size: 0.95rem; }
+
+  .form-row {
+    display: grid;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .form-row.tx-row { grid-template-columns: 1fr 1fr 140px 110px; }
+  .form-row.split-row { grid-template-columns: 1.5fr 120px 120px 110px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus { border-color: var(--blue); }
+  select option { background: var(--surface2); }
+
+  .type-toggle {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .type-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .type-btn.active.expense { background: var(--red-dim); color: var(--red); }
+  .type-btn.active.income { background: var(--green-dim); color: var(--green); }
+
+  .btn-add {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover { opacity: 0.88; }
+  .btn-add:active { transform: scale(0.97); }
+  .btn-add.yellow-btn { background: linear-gradient(135deg, #e09800, var(--yellow)); color: #1a1200; }
+
+  /* Split hint banner */
+  .split-hint {
+    background: var(--yellow-dim);
+    border: 1px solid rgba(255,209,102,0.18);
+    border-radius: 10px;
+    padding: 9px 14px;
+    margin-bottom: 14px;
+    font-size: 0.8rem;
+    color: var(--yellow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Split preview */
+  .split-preview {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    font-size: 0.79rem;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* Pending list */
+  .pending-header {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin: 16px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .pending-badge {
+    background: var(--yellow-dim);
+    color: var(--yellow);
+    border: 1px solid rgba(255,209,102,0.25);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    margin-left: auto;
+  }
+
+  .split-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .split-item {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 13px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border);
+    animation: slideIn 0.25s ease;
+    transition: border-color 0.2s;
+  }
+
+  .split-item:hover { border-color: rgba(255,209,102,0.2); }
+
+  .split-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--yellow-dim);
+    border: 2px solid rgba(255,209,102,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--yellow);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .split-info-col { flex: 1; min-width: 0; }
+  .split-name { font-size: 0.88rem; font-weight: 600; }
+  .split-bill-name { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+  .split-progress { flex: 0 0 76px; }
+  .split-progress-bar { height: 4px; background: var(--surface); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+  .split-progress-fill { height: 100%; border-radius: 4px; background: var(--yellow); transition: width 0.4s ease; }
+  .split-progress-label { font-size: 0.63rem; color: var(--muted); text-align: right; }
+
+  .split-amounts { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+  .split-pending { font-family: 'DM Mono', monospace; font-weight: 700; font-size: 0.92rem; color: var(--yellow); }
+  .split-total-small { font-size: 0.66rem; color: var(--muted); }
+
+  .btn-received {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(0,229,160,0.22);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-received:hover { background: var(--green); color: #0f1117; }
+
+  .btn-delete-sm {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-delete-sm:hover { background: var(--red-dim); color: var(--red); }
+
+  /* Transaction List */
+  .list-section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .list-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tab {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.73rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .tab.active { background: var(--blue-dim); color: var(--blue); border-color: rgba(79,142,247,0.3); }
+
+  .tx-list { max-height: 380px; overflow-y: auto; }
+  .tx-list::-webkit-scrollbar { width: 4px; }
+  .tx-list::-webkit-scrollbar-track { background: transparent; }
+  .tx-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .tx-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    animation: slideIn 0.25s ease;
+    transition: background 0.15s;
+  }
+
+  .tx-item:last-child { border-bottom: none; }
+  .tx-item:hover { background: rgba(255,255,255,0.02); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tx-icon {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .tx-icon.expense { background: var(--red-dim); }
+  .tx-icon.income { background: var(--green-dim); }
+  .tx-icon.split-return { background: var(--yellow-dim); }
+
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-desc { font-size: 0.87rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-meta { font-size: 0.69rem; color: var(--muted); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+  .tx-cat { background: var(--surface2); padding: 2px 7px; border-radius: 10px; font-size: 0.65rem; }
+  .tx-cat.split-tag { background: var(--yellow-dim); color: var(--yellow); }
+  .tx-cat.split-exp-tag { background: rgba(255,77,109,0.08); color: #ff8fa3; }
+
+  .tx-amount { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 0.9rem; flex-shrink: 0; }
+  .tx-amount.expense { color: var(--red); }
+  .tx-amount.income { color: var(--green); }
+  .tx-amount.split-return { color: var(--yellow); }
+
+  .tx-delete {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .tx-delete:hover { background: var(--red-dim); color: var(--red); }
+
+  .empty-state { padding: 40px 20px; text-align: center; color: var(--muted); }
+  .empty-state .material-icons-round { font-size: 2.4rem; margin-bottom: 10px; opacity: 0.3; display: block; }
+  .empty-state p { font-size: 0.84rem; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 28px;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    animation: modalIn 0.22s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal h3 { font-size: 1.1rem; margin-bottom: 5px; }
+  .modal p { font-size: 0.82rem; color: var(--muted); margin-bottom: 18px; }
+
+  .modal-amt-display {
+    background: var(--yellow-dim);
+    border: 1px solid rgba(255,209,102,0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    color: var(--yellow);
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; margin-bottom: 6px; }
+
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-cancel { flex: 1; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-cancel:hover { color: var(--text); }
+  .btn-confirm { flex: 1; padding: 10px; background: var(--green); border: none; border-radius: 10px; color: #0f1117; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+  .btn-confirm:hover { opacity: 0.88; }
+
+  @media (max-width: 680px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row.tx-row { grid-template-columns: 1fr 1fr; }
+    .form-row.tx-row .field:nth-child(3) { grid-column: span 2; }
+    .form-row.tx-row .btn-add { grid-column: span 2; }
+    .form-row.split-row { grid-template-columns: 1fr 1fr; }
+    .form-row.split-row .field:first-child { grid-column: span 2; }
+    .form-row.split-row .btn-add { grid-column: span 2; }
+    .split-progress { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="material-icons-round">account_balance_wallet</span>
+    SpendWise
+  </div>
+  <div class="date-badge" id="dateDisplay"></div>
+</header>
+
+<div class="main">
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="card green">
+      <div class="card-icon"><span class="material-icons-round">trending_up</span></div>
+      <div class="card-label">Total Gains (24h)</div>
+      <div class="card-amount" id="totalGains">₹0</div>
+      <div class="card-sub" id="gainsCount">0 transactions</div>
+    </div>
+    <div class="card red">
+      <div class="card-icon"><span class="material-icons-round">trending_down</span></div>
+      <div class="card-label">Total Spends (24h)</div>
+      <div class="card-amount" id="totalSpends">₹0</div>
+      <div class="card-sub" id="spendsCount">0 transactions</div>
+    </div>
+    <div class="card yellow">
+      <div class="card-icon"><span class="material-icons-round">hourglass_top</span></div>
+      <div class="card-label">Pending Amount</div>
+      <div class="card-amount" id="totalPending">₹0</div>
+      <div class="card-sub" id="pendingCount">0 friends owe you</div>
+    </div>
+    <div class="card blue">
+      <div class="card-icon"><span class="material-icons-round">savings</span></div>
+      <div class="card-label">Balance</div>
+      <div class="card-amount" id="balance">₹0</div>
+      <div class="balance-bar"><div class="balance-fill" id="balanceFill" style="width:50%"></div></div>
+    </div>
+  </div>
+
+  <!-- Add Transaction -->
+  <div class="section-box">
+    <div class="section-title">
+      <span class="material-icons-round">add_circle_outline</span>
+      Add Transaction
+    </div>
+    <div class="form-row tx-row">
+      <div class="field">
+        <label>Description</label>
+        <input type="text" id="desc" placeholder="e.g. Coffee, Salary..." />
+      </div>
+      <div class="field">
+        <label>Amount (₹)</label>
+        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <div class="type-toggle">
+          <button class="type-btn expense active" id="btnExpense" onclick="setType('expense')">
+            <span class="material-icons-round" style="font-size:1.2rem">remove</span>
+          </button>
+          <button class="type-btn income" id="btnIncome" onclick="setType('income')">
+            <span class="material-icons-round" style="font-size:1.2rem">add</span>
+          </button>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addTransaction()">
+        <span class="material-icons-round" style="font-size:1rem">add_circle</span> Add
+      </button>
+    </div>
+  </div>
+
+  <!-- Split Bill -->
+  <div class="section-box">
+    <div class="section-title">
+      <span class="material-icons-round">group</span>
+      Split a Bill
+    </div>
+
+    <div class="form-row split-row">
+      <div class="field">
+        <label>Bill Description</label>
+        <input type="text" id="splitDesc" placeholder="e.g. Dinner at Pizza Hut" />
+      </div>
+      <div class="field">
+        <label>Total Bill (₹)</label>
+        <input type="number" id="splitTotal" placeholder="0.00" min="0" step="0.01" oninput="calcSplitShare()" />
+      </div>
+      <div class="field">
+        <label>Split Among</label>
+        <input type="number" id="splitCount" placeholder="3" min="2" max="20" value="3" oninput="calcSplitShare()" />
+      </div>
+      <button class="btn-add yellow-btn" onclick="addSplitBill()">
+        <span class="material-icons-round" style="font-size:1rem">call_split</span> Split
+      </button>
+    </div>
+
+    <!-- Preview -->
+    <div id="splitPreview" style="display:none;margin-top:10px;padding:10px 14px;background:var(--surface2);border-radius:10px;font-size:0.79rem;color:var(--muted);display:none;flex-wrap:wrap;gap:16px;">
+      <span>Your share: <strong style="color:var(--text)" id="myShare">₹0</strong></span>
+      <span>Each person owes: <strong style="color:var(--yellow)" id="friendShare">₹0</strong></span>
+    </div>
+
+    <!-- Pending list -->
+    <div id="splitListWrap" style="display:none;">
+      <div class="pending-header">
+        <span class="material-icons-round" style="font-size:0.85rem;color:var(--yellow)">pending_actions</span>
+        Pending Repayments
+        <span class="pending-badge" id="pendingBadge">₹0</span>
+      </div>
+      <div class="split-list" id="splitList"></div>
+    </div>
+  </div>
+
+  <!-- Transaction List -->
+  <div class="list-section">
+    <div class="list-header">
+      <div class="section-title" style="margin-bottom:0;flex-shrink:0">
+        <span class="material-icons-round" style="font-size:0.95rem">receipt_long</span>
+        Transactions
+      </div>
+      <div class="filter-tabs">
+        <button class="tab active" onclick="setFilter('all',this)">All</button>
+        <button class="tab" onclick="setFilter('income',this)">Income</button>
+        <button class="tab" onclick="setFilter('expense',this)">Expenses</button>
+        <button class="tab" onclick="setFilter('split-return',this)">Split Returns</button>
+      </div>
+    </div>
+    <div class="tx-list" id="txList"></div>
+  </div>
+
+</div>
+
+<!-- Received Payment Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>💸 Mark as Received</h3>
+    <p>How much did <strong id="modalFriendName"></strong> pay back?</p>
+    <div class="modal-amt-display" id="modalPendingAmt">₹0</div>
+    <div class="modal-field">
+      <label>Amount Received (₹)</label>
+      <input type="number" id="modalAmount" placeholder="Enter amount" min="0.01" step="0.01" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmReceived()">✓ Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ICONS = {
+    expense: ['🛒','🍕','🚗','💊','🎮','👕','🏠','☕','🎬','💡'],
+    income:  ['💼','💰','🎁','📈','🏦','💳'],
+    'split-return': ['🤝','💸','🙌','✅']
+  };
+
+  let txType = 'expense';
+  let filter = 'all';
+  let transactions = JSON.parse(localStorage.getItem('sw_txs') || '[]');
+  let splitBills   = JSON.parse(localStorage.getItem('sw_splits') || '[]');
+  let modalSplitId = null;
+
+  // ── Utilities ──────────────────────────────────
+  const fmt = n => '₹' + Math.abs(n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  function shake(el) {
+    el.style.borderColor = 'var(--red)';
+    setTimeout(() => el.style.borderColor = '', 1200);
+  }
+
+  function saveAll() {
+    localStorage.setItem('sw_txs',     JSON.stringify(transactions));
+    localStorage.setItem('sw_splits',  JSON.stringify(splitBills));
+  }
+
+  function getLast24h() {
+    const cut = Date.now() - 864e5;
+    return transactions.filter(t => new Date(t.time).getTime() >= cut);
+  }
+
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' · ' +
+           d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  // ── Type / Filter ──────────────────────────────
+  function setType(t) {
+    txType = t;
+    document.getElementById('btnExpense').className = 'type-btn expense' + (t==='expense'?' active':'');
+    document.getElementById('btnIncome').className  = 'type-btn income'  + (t==='income' ?' active':'');
+  }
+
+  function setFilter(f, el) {
+    filter = f;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderList();
+  }
+
+  // ── Add normal transaction ─────────────────────
+  function addTransaction() {
+    const desc   = document.getElementById('desc').value.trim();
+    const amount = parseFloat(document.getElementById('amount').value);
+    if (!desc || isNaN(amount) || amount <= 0) {
+      if (!desc) shake(document.getElementById('desc'));
+      if (isNaN(amount)||amount<=0) shake(document.getElementById('amount'));
+      return;
+    }
+    transactions.unshift({ id: Date.now(), desc, amount, type: txType, icon: rnd(ICONS[txType]), time: new Date().toISOString() });
+    saveAll();
+    document.getElementById('desc').value = '';
+    document.getElementById('amount').value = '';
+    update();
+  }
+
+  function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    saveAll(); update();
+  }
+
+  // ── Split bill ─────────────────────────────────
+  function calcSplitShare() {
+    const total = parseFloat(document.getElementById('splitTotal').value);
+    const count = parseInt(document.getElementById('splitCount').value) || 2;
+    const preview = document.getElementById('splitPreview');
+    if (!isNaN(total) && total > 0 && count >= 2) {
+      const share = total / count;
+      document.getElementById('myShare').textContent     = fmt(share);
+      document.getElementById('friendShare').textContent = fmt(share);
+      preview.style.display = 'flex';
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  function addSplitBill() {
+    const desc  = document.getElementById('splitDesc').value.trim();
+    const total = parseFloat(document.getElementById('splitTotal').value);
+    const count = parseInt(document.getElementById('splitCount').value) || 2;
+
+    if (!desc)                  shake(document.getElementById('splitDesc'));
+    if (isNaN(total)||total<=0) shake(document.getElementById('splitTotal'));
+    if (!desc || isNaN(total) || total <= 0 || count < 2) return;
+
+    const perShare = parseFloat((total / count).toFixed(2));
+    const now = new Date().toISOString();
+
+    // Log the full bill as an expense
+    transactions.unshift({
+      id: Date.now(),
+      desc: `Split bill: ${desc}`,
+      amount: total,
+      type: 'expense',
+      icon: '🤝',
+      time: now,
+      isSplitBill: true
+    });
+
+    // Create one pending entry per person (Person 1 … Person N-1, excluding yourself)
+    for (let i = 1; i < count; i++) {
+      splitBills.push({
+        id: Date.now() + i,
+        friend: `Person ${i}`,
+        desc,
+        perShare,
+        pending: perShare,
+        time: now
+      });
+    }
+
+    saveAll();
+    document.getElementById('splitDesc').value  = '';
+    document.getElementById('splitTotal').value = '';
+    document.getElementById('splitCount').value = '3';
+    document.getElementById('splitPreview').style.display = 'none';
+    update();
+  }
+
+  function deleteSplit(id) {
+    splitBills = splitBills.filter(s => s.id !== id);
+    saveAll(); update();
+  }
+
+  // ── Modal ──────────────────────────────────────
+  function openReceivedModal(splitId) {
+    const s = splitBills.find(s => s.id === splitId);
+    if (!s) return;
+    modalSplitId = splitId;
+    document.getElementById('modalFriendName').textContent = s.friend;
+    document.getElementById('modalPendingAmt').textContent = fmt(s.pending);
+    document.getElementById('modalAmount').value = s.pending.toFixed(2);
+    document.getElementById('modalOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('modalAmount').select(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    modalSplitId = null;
+  }
+
+  function confirmReceived() {
+    const received = parseFloat(document.getElementById('modalAmount').value);
+    if (isNaN(received) || received <= 0) { shake(document.getElementById('modalAmount')); return; }
+
+    const s = splitBills.find(s => s.id === modalSplitId);
+    if (!s) return;
+
+    const actual = Math.min(received, s.pending);
+
+    // Add as a "split-return" — counts as a gain
+    transactions.unshift({
+      id: Date.now(),
+      desc: `${s.friend} repaid — "${s.desc}"`,
+      amount: actual,
+      type: 'split-return',
+      icon: rnd(ICONS['split-return']),
+      time: new Date().toISOString()
+    });
+
+    // Reduce pending
+    s.pending = parseFloat((s.pending - actual).toFixed(2));
+    if (s.pending <= 0) splitBills = splitBills.filter(b => b.id !== modalSplitId);
+
+    saveAll();
+    closeModal();
+    update();
+  }
+
+  // ── Update summaries ───────────────────────────
+  function update() {
+    const recent = getLast24h();
+    const gains  = recent.filter(t => t.type==='income' || t.type==='split-return').reduce((s,t)=>s+t.amount,0);
+    const spends = recent.filter(t => t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const bal    = gains - spends;
+    const pendingTotal = splitBills.reduce((s,b)=>s+b.pending,0);
+
+    document.getElementById('totalGains').textContent   = fmt(gains);
+    document.getElementById('totalSpends').textContent  = fmt(spends);
+    document.getElementById('balance').textContent      = (bal<0?'-':'') + fmt(bal);
+    document.getElementById('totalPending').textContent = fmt(pendingTotal);
+
+    document.getElementById('gainsCount').textContent   = recent.filter(t=>t.type==='income'||t.type==='split-return').length + ' transactions';
+    document.getElementById('spendsCount').textContent  = recent.filter(t=>t.type==='expense').length + ' transactions';
+    document.getElementById('pendingCount').textContent = splitBills.length + ' person' + (splitBills.length!==1?'s':'') + ' owe' + (splitBills.length===1?'s':'') + ' you';
+
+    const total = gains + spends;
+    document.getElementById('balanceFill').style.width = (total>0 ? (gains/total)*100 : 50) + '%';
+
+    renderSplits();
+    renderList();
+  }
+
+  // ── Render split pending ───────────────────────
+  function renderSplits() {
+    const wrap  = document.getElementById('splitListWrap');
+    const list  = document.getElementById('splitList');
+    const badge = document.getElementById('pendingBadge');
+    badge.textContent = fmt(splitBills.reduce((s,b)=>s+b.pending,0));
+
+    if (splitBills.length === 0) { wrap.style.display='none'; return; }
+    wrap.style.display = 'block';
+
+    list.innerHTML = splitBills.map(s => {
+      const paid = s.perShare - s.pending;
+      const pct  = Math.min(100, Math.round((paid / s.perShare) * 100));
+      const init = s.friend.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      return `
+        <div class="split-item">
+          <div class="split-avatar">${init}</div>
+          <div class="split-info-col">
+            <div class="split-name">${s.friend}</div>
+            <div class="split-bill-name">📋 ${s.desc} · ${fmtTime(s.time)}</div>
+          </div>
+          <div class="split-progress">
+            <div class="split-progress-bar"><div class="split-progress-fill" style="width:${pct}%"></div></div>
+            <div class="split-progress-label">${pct}% paid</div>
+          </div>
+          <div class="split-amounts">
+            <div class="split-pending">${fmt(s.pending)}</div>
+            <div class="split-total-small">of ${fmt(s.perShare)}</div>
+          </div>
+          <button class="btn-received" onclick="openReceivedModal(${s.id})">
+            <span class="material-icons-round" style="font-size:0.85rem">check_circle</span> Received
+          </button>
+          <button class="btn-delete-sm" onclick="deleteSplit(${s.id})">
+            <span class="material-icons-round" style="font-size:1rem">close</span>
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Render transaction list ────────────────────
+  function renderList() {
+    const list = document.getElementById('txList');
+    let items = [...transactions];
+    if (filter==='split-return') items = items.filter(t=>t.type==='split-return');
+    else if (filter!=='all')     items = items.filter(t=>t.type===filter);
+
+    if (items.length===0) {
+      list.innerHTML = `<div class="empty-state">
+        <span class="material-icons-round">receipt_long</span>
+        <p>No transactions here yet.</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(t => {
+      const isSR   = t.type==='split-return';
+      const isSExp = t.isSplitBill;
+      const cls    = isSR ? 'split-return' : t.type;
+      const sign   = t.type==='expense' ? '-' : '+';
+      let catLabel, catClass;
+      if (isSR)     { catLabel='🤝 Split Return'; catClass='tx-cat split-tag'; }
+      else if(isSExp){ catLabel='🤝 Split Expense'; catClass='tx-cat split-exp-tag'; }
+      else          { catLabel = t.type==='income' ? 'Income' : 'Expense'; catClass='tx-cat'; }
+
+      return `
+        <div class="tx-item">
+          <div class="tx-icon ${cls}">${t.icon}</div>
+          <div class="tx-info">
+            <div class="tx-desc">${t.desc}</div>
+            <div class="tx-meta">
+              <span>${fmtTime(t.time)}</span>
+              <span class="${catClass}">${catLabel}</span>
+            </div>
+          </div>
+          <div class="tx-amount ${cls}">${sign}${fmt(t.amount)}</div>
+          <button class="tx-delete" onclick="deleteTransaction(${t.id})">
+            <span class="material-icons-round" style="font-size:1rem">close</span>
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Date + boot ────────────────────────────────
+  document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-IN',{
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key==='Enter') {
+      if (e.target.id==='desc'||e.target.id==='amount') addTransaction();
+      if (e.target.id==='splitDesc'||e.target.id==='splitTotal'||e.target.id==='splitCount') addSplitBill();
+      if (e.target.id==='modalAmount') confirmReceived();
+    }
+    if (e.key==='Escape') closeModal();
+  });
+
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target.id==='modalOverlay') closeModal();
+  });
+
+  update();
+  setInterval(update, 60000);
+</script>
+</body>
+</html>
